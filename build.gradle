@@ -1,0 +1,118 @@
+/*
+ * Copyright 2015-2019 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+buildscript {
+  repositories {
+	maven { url "https://repo.spring.io/plugins-release" }
+  }
+  dependencies {
+	  classpath 'io.spring.gradle:propdeps-plugin:0.0.9.RELEASE'
+  }
+}
+
+configure(rootProject) {
+
+  rootProject.group = 'io.rsocket'
+	
+  rootProject.description = 'Bill of materials to make sure a consistent set of versions is used for Rsocket-Java.'
+  apply plugin: 'propdeps'
+  apply plugin: 'propdeps-maven'
+  apply plugin: 'maven'
+
+  repositories {
+	mavenCentral()
+	jcenter()
+	maven { url 'http://repo.spring.io/release' }
+	maven { url 'http://repo.spring.io/milestone' }
+	maven { url "https://oss.sonatype.org/content/repositories/releases/" }
+
+	if (version.endsWith('BUILD-SNAPSHOT') || project.hasProperty('platformVersion')) {
+	  mavenLocal()
+	  maven { url 'http://repo.spring.io/libs-snapshot' }
+	}
+  }
+
+  configurations.archives.artifacts.clear()
+  artifacts {
+	// work around GRADLE-2406 by attaching text artifact
+	archives(file("rsocket-bom.txt"))
+  }
+
+  install {
+	repositories.mavenInstaller {
+	  customizePom(pom, rootProject)
+	}
+  }
+
+  dependencies {
+	  compile "io.rsocket:rsocket-core:${rsocketVersion}"
+	  compile "io.rsocket:rsocket-load-balancer:${rsocketVersion}"
+	  compile "io.rsocket:rsocket-micrometer:${rsocketVersion}"
+	  compile "io.rsocket:rsocket-test:${rsocketVersion}"
+	  compile "io.rsocket:rsocket-transport-netty:${rsocketVersion}"
+	  compile "io.rsocket:rsocket-transport-local:${rsocketVersion}"
+
+	  compile "io.rsocket.rpc:rsocket-rpc-core:${rsocketRpcVersion}"
+	  compile "io.rsocket.rpc:rsocket-rpc-metrics-idl:${rsocketRpcVersion}"
+	  compile "io.rsocket.rpc:rsocket-rpc-protobuf:${rsocketRpcVersion}"
+	  compile "io.rsocket.rpc:rsocket-rpc-protobuf-idl:${rsocketRpcVersion}"
+  }
+}
+
+def customizePom(pom, gradleProject) {
+  pom.whenConfigured { generatedPom ->
+
+	//make sure that dependencies are under <dependencyManagement>
+	generatedPom.withXml {
+	  if (generatedPom.dependencies.size > 0) {
+		asNode().appendNode('dependencyManagement', asNode().dependencies)
+		asNode().dependencies.replaceNode {}
+	  }
+	}
+
+	generatedPom.project {
+	  name = 'RSocket-Java Release Train - BOM'
+	  description = gradleProject.description
+	  url = 'http://rsocket.io'
+
+	  packaging = "pom"
+
+	  organization {
+		name = 'Netifi, Inc.'
+		url = 'https://www.netifi.com'
+	  }
+
+	  licenses {
+		license {
+		  name 'The Apache Software License, Version 2.0'
+		  url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+		  distribution 'repo'
+		}
+	  }
+
+	  scm {
+		url = 'https://github.com/rsocket/rsocket-java'
+		connection = 'scm:git:git://github.com/rsocket/rsocket-java'
+		developerConnection = 'scm:git:git://github.com/rsocket/rsocket-java'
+	  }
+
+	  issueManagement {
+		system = "GitHub Issues"
+		url = "https://github.com/rsocket"
+	  }
+	}
+  }.writeTo("$buildDir/poms/rsocket-bom-${version}.xml")
+}
