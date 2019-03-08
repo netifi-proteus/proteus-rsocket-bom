@@ -20,17 +20,20 @@ buildscript {
   }
   dependencies {
 	  classpath 'io.spring.gradle:propdeps-plugin:0.0.9.RELEASE'
+	  classpath 'org.jfrog.buildinfo:build-info-extractor-gradle:4.9.3'
   }
 }
 
 configure(rootProject) {
 
   rootProject.group = 'io.rsocket'
-	
+
   rootProject.description = 'Bill of materials to make sure a consistent set of versions is used for Rsocket-Java.'
   apply plugin: 'propdeps'
   apply plugin: 'propdeps-maven'
   apply plugin: 'maven'
+  apply plugin: 'maven-publish'
+  apply plugin: 'com.jfrog.artifactory'
 
   repositories {
 	mavenCentral()
@@ -115,4 +118,34 @@ def customizePom(pom, gradleProject) {
 	  }
 	}
   }.writeTo("$buildDir/poms/rsocket-bom-${version}.xml")
+}
+
+publishing {
+	publications {
+		mavenJava(MavenPublication) {
+			artifacts = ["${buildDir}/poms/rsocket-bom-${version}.xml"]
+		}
+	}
+}
+
+artifactory {
+	publish {
+		contextUrl = 'https://artifactory.netifiinc.com/artifactory'
+
+		repository {
+			repoKey = version.contains('SNAPSHOT')
+					? 'libs-snapshot-local'
+					: 'libs-release-local'
+			username = project.hasProperty('netifiArtifactoryUsername')
+					? project.property('netifiArtifactoryUsername')
+					: System.getenv('NETIFI_ARTIFACTORY_USERNAME')
+			password = project.hasProperty('netifiArtifactoryPassword')
+					? project.property('netifiArtifactoryPassword')
+					: System.getenv('NETIFI_ARTIFACTORY_PASSWORD')
+		}
+
+		defaults {
+			publications('mavenJava')
+		}
+	}
 }
