@@ -27,11 +27,12 @@ buildscript {
 configure(rootProject) {
 
   rootProject.group = 'io.rsocket'
-	
+
   rootProject.description = 'Bill of materials to make sure a consistent set of versions is used for Rsocket-Java.'
   apply plugin: 'propdeps'
   apply plugin: 'propdeps-maven'
   apply plugin: 'maven'
+  apply plugin: 'maven-publish'
   apply plugin: 'com.jfrog.artifactory'
 
   repositories {
@@ -117,6 +118,14 @@ def customizePom(pom, gradleProject) {
 	  }
 	}
   }.writeTo("$buildDir/poms/rsocket-bom-${version}.xml")
+}
+
+publishing {
+	publications {
+		mavenJava(MavenPublication) {
+			artifacts = ["${buildDir}/poms/rsocket-bom-${version}.xml"]
+		}
+	}
 }
 
 artifactory {
