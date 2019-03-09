@@ -90,6 +90,7 @@ def customizePom(pom, gradleProject) {
 	  name = 'RSocket-Java Release Train - BOM'
 	  description = gradleProject.description
 	  url = 'http://rsocket.io'
+	  groupId = group
 
 	  packaging = "pom"
 
@@ -122,8 +123,13 @@ def customizePom(pom, gradleProject) {
 
 publishing {
 	publications {
-		mavenJava(MavenPublication) {
-			artifacts = ["${buildDir}/poms/rsocket-bom-${version}.xml"]
+		maven(MavenPublication) {
+			pom.withXml {
+				def sb = asString()
+				sb.setLength 0
+				sb.append  file( "$buildDir/poms/pom-default.xml" ).text
+				println( sb.toString() )
+			}
 		}
 	}
 }
@@ -145,7 +151,7 @@ artifactory {
 		}
 
 		defaults {
-			publications('mavenJava')
+			publications('maven')
 		}
 	}
 }
