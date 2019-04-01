@@ -11,7 +11,7 @@ In Maven, you need to import the bom first:
         <dependency>
             <groupId>io.rsocket</groupId>
             <artifactId>rsocket-bom</artifactId>
-            <version>Palladium-BUILD-SNAPSHOT</version>
+            <version>Palladium-RELEASE</version>
             <type>pom</type>
             <scope>import</scope>
         </dependency>
@@ -44,7 +44,7 @@ your project without a version number.
 ```groovy
 dependencies {
      // import BOM
-     implementation platform('io.rsocket:rsocket-bom:Palladium-BUILD-SNAPSHOT')
+     implementation platform('io.rsocket:rsocket-bom:Palladium-RELEASE')
 
      // add dependencies without a version number
      implementation 'io.rsocket:rsocket-core'
@@ -66,7 +66,7 @@ Then use it to import the BOM:
 ```groovy
 dependencyManagement {
      imports {
-          mavenBom "io.rsocket:rsocket-bom:Palladium-BUILD-SNAPSHOT"
+          mavenBom "io.rsocket:rsocket-bom:Palladium-RELEASE"
      }
 }
 ```
