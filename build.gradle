@@ -33,6 +33,7 @@ apply plugin: 'propdeps-maven'
 apply plugin: 'maven'
 apply plugin: 'maven-publish'
 apply plugin: 'com.jfrog.artifactory'
+apply plugin: 'com.jfrog.bintray'
 
 repositories {
 	mavenCentral()
@@ -148,32 +149,34 @@ artifactory {
 		}
 	}
 }
+if (project.hasProperty('bintrayUser') && project.hasProperty('bintrayKey')) {
+	plugins.withId('com.jfrog.bintray') {
+		bintray {
+			user = project.property('bintrayUser')
+			key = project.property('bintrayKey')
 
-plugins.withId('com.jfrog.bintray') {
-	bintray {
-		user = project.property('bintrayUser')
-		key = project.property('bintrayKey')
+			publications = ['maven']
 
-		publications = ['maven']
+			//dryRun = true
+			publish = (osdetector.os == 'osx')
+			override = true
 
-		//dryRun = true
-		publish = (osdetector.os == 'osx')
-		override = true
+			pkg {
+				repo = 'netifi-oss'
+				name = project.name
+				userOrg = 'netifi'
+				desc = "${project.description}"
+				websiteUrl = 'https://github.com/netifi-proteus/proteus-rsocket-bom'
+				issueTrackerUrl =
+								'https://github.com/netifi-proteus/proteus-rsocket-bom/issues'
+				vcsUrl = 'https://github.com/netifi-proteus/proteus-rsocket-bom.git'
+				licenses = ['Apache-2.0']
+				githubRepo = 'netifi-proteus/proteus-rsocket-bom'
+				githubReleaseNotesFile = 'CHANGELOG.md'
 
-		pkg {
-			repo = 'netifi-oss'
-			name = project.name
-			userOrg = 'netifi'
-			desc = "${project.description}"
-			websiteUrl = 'https://github.com/netifi-proteus/proteus-rsocket-bom'
-			issueTrackerUrl = 'https://github.com/netifi-proteus/proteus-rsocket-bom/issues'
-			vcsUrl = 'https://github.com/netifi-proteus/proteus-rsocket-bom.git'
-			licenses = ['Apache-2.0']
-			githubRepo = 'netifi-proteus/proteus-rsocket-bom'
-			githubReleaseNotesFile = 'CHANGELOG.md'
-
-			version {
-				name = "$project.version".toString()
+				version {
+					name = "$project.version".toString()
+				}
 			}
 		}
 	}
