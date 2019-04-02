@@ -9,9 +9,9 @@ In Maven, you need to import the bom first:
 <dependencyManagement>
     <dependencies>
         <dependency>
-            <groupId>io.rsocket</groupId>
+            <groupId>io.netifi.proteus</groupId>
             <artifactId>rsocket-bom</artifactId>
-            <version>Palladium-RELEASE</version>
+            <version>1.6.0</version>
             <type>pom</type>
             <scope>import</scope>
         </dependency>
