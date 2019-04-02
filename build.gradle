@@ -162,7 +162,7 @@ plugins.withId('com.jfrog.bintray') {
 		publications = ['maven']
 
 		//dryRun = true
-		publish = (osdetector.os == 'osx')
+		publish = true
 		override = true
 
 		pkg {
@@ -187,6 +187,8 @@ plugins.withId('com.jfrog.bintray') {
 
 
 publish.dependsOn("build")
+bintrayPublish.dependsOn("build")
+bintrayUpload.dependsOn("build")
 generatePomFileForMavenPublication.dependsOn("build")
 publishMavenPublicationToMavenLocal.dependsOn("build")
 publishToMavenLocal.dependsOn("build")
