@@ -20,105 +20,98 @@ buildscript {
   }
   dependencies {
 	  classpath 'io.spring.gradle:propdeps-plugin:0.0.9.RELEASE'
+	  classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4"
 	  classpath 'org.jfrog.buildinfo:build-info-extractor-gradle:4.9.3'
   }
 }
 
-configure(rootProject) {
+rootProject.group = 'io.netifi.proteus'
 
-  rootProject.group = 'io.netifi.proteus'
+rootProject.description = 'Bill of materials to make sure a consistent set of versions is used for Rsocket-Java.'
+apply plugin: 'propdeps'
+apply plugin: 'propdeps-maven'
+apply plugin: 'maven'
+apply plugin: 'maven-publish'
+apply plugin: 'com.jfrog.artifactory'
 
-  rootProject.description = 'Bill of materials to make sure a consistent set of versions is used for Rsocket-Java.'
-  apply plugin: 'propdeps'
-  apply plugin: 'propdeps-maven'
-  apply plugin: 'maven'
-  apply plugin: 'maven-publish'
-  apply plugin: 'com.jfrog.artifactory'
+repositories {
+	mavenCentral()
+	jcenter()
+	maven { url 'http://repo.spring.io/release' }
+	maven { url 'http://repo.spring.io/milestone' }
+	maven { url "https://oss.sonatype.org/content/repositories/releases/" }
 
-  repositories {
-		mavenCentral()
-		jcenter()
-		maven { url 'http://repo.spring.io/release' }
-		maven { url 'http://repo.spring.io/milestone' }
-		maven { url "https://oss.sonatype.org/content/repositories/releases/" }
+	if (version.endsWith('BUILD-SNAPSHOT') || project.hasProperty('platformVersion')) {
+		mavenLocal()
+		maven { url 'http://repo.spring.io/libs-snapshot' }
+	}
+}
 
-		if (version.endsWith('BUILD-SNAPSHOT') || project.hasProperty('platformVersion')) {
-			mavenLocal()
-			maven { url 'http://repo.spring.io/libs-snapshot' }
-		}
-  }
+configurations.archives.artifacts.clear()
 
-  configurations.archives.artifacts.clear()
-  artifacts {
-		// work around GRADLE-2406 by attaching text artifact
-		archives(file("rsocket-bom.txt"))
-  }
-
-  install {
-		repositories.mavenInstaller {
-			customizePom(pom, rootProject)
-		}
-  }
-
-  dependencies {
-	  compile "io.rsocket:rsocket-core:${rsocketVersion}"
-	  compile "io.rsocket:rsocket-load-balancer:${rsocketVersion}"
-	  compile "io.rsocket:rsocket-micrometer:${rsocketVersion}"
-	  compile "io.rsocket:rsocket-test:${rsocketVersion}"
-	  compile "io.rsocket:rsocket-transport-netty:${rsocketVersion}"
-	  compile "io.rsocket:rsocket-transport-local:${rsocketVersion}"
-
-	  compile "io.rsocket.rpc:rsocket-rpc-core:${rsocketRpcVersion}"
-	  compile "io.rsocket.rpc:rsocket-rpc-metrics-idl:${rsocketRpcVersion}"
-	  compile "io.rsocket.rpc:rsocket-rpc-protobuf:${rsocketRpcVersion}"
-	  compile "io.rsocket.rpc:rsocket-rpc-protobuf-idl:${rsocketRpcVersion}"
+build.doLast {
+  pom {
+	  customizePom(it, project)
   }
 }
 
-def customizePom(pom, gradleProject) {
-  pom.whenConfigured { generatedPom ->
+dependencies {
+  compile "io.rsocket:rsocket-core:${rsocketVersion}"
+  compile "io.rsocket:rsocket-load-balancer:${rsocketVersion}"
+  compile "io.rsocket:rsocket-micrometer:${rsocketVersion}"
+  compile "io.rsocket:rsocket-test:${rsocketVersion}"
+  compile "io.rsocket:rsocket-transport-netty:${rsocketVersion}"
+  compile "io.rsocket:rsocket-transport-local:${rsocketVersion}"
 
+  compile "io.rsocket.rpc:rsocket-rpc-core:${rsocketRpcVersion}"
+  compile "io.rsocket.rpc:rsocket-rpc-metrics-idl:${rsocketRpcVersion}"
+  compile "io.rsocket.rpc:rsocket-rpc-protobuf:${rsocketRpcVersion}"
+  compile "io.rsocket.rpc:rsocket-rpc-protobuf-idl:${rsocketRpcVersion}"
+}
+
+def customizePom(generatedPom, gradleProject) {
 	//make sure that dependencies are under <dependencyManagement>
 	generatedPom.withXml {
-	  if (generatedPom.dependencies.size > 0) {
-		asNode().appendNode('dependencyManagement', asNode().dependencies)
-		asNode().dependencies.replaceNode {}
-	  }
+		if (generatedPom.generatedDependencies.size > 0) {
+			asNode().appendNode('dependencyManagement', asNode().dependencies)
+			asNode().dependencies.replaceNode {}
+		}
 	}
 
 	generatedPom.project {
-	  name = 'RSocket-Java Release Train - BOM'
-	  description = gradleProject.description
-	  url = 'http://rsocket.io'
-	  groupId = group
-
-	  packaging = "pom"
-
-	  organization {
-		name = 'Netifi, Inc.'
+		name = 'Proteus-RSocket-Java Release Train - BOM'
+		description = gradleProject.description
 		url = 'https://www.netifi.com'
-	  }
+		groupId = group
 
-	  licenses {
-		license {
-		  name 'The Apache Software License, Version 2.0'
-		  url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-		  distribution 'repo'
+		packaging = "pom"
+
+		organization {
+			name = 'Netifi, Inc.'
+			url = 'https://www.netifi.com'
 		}
-	  }
 
-	  scm {
-		url = 'https://github.com/rsocket/rsocket-java'
-		connection = 'scm:git:git://github.com/rsocket/rsocket-java'
-		developerConnection = 'scm:git:git://github.com/rsocket/rsocket-java'
-	  }
+		licenses {
+			license {
+				name 'The Apache Software License, Version 2.0'
+				url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+				distribution 'repo'
+			}
+		}
 
-	  issueManagement {
-		system = "GitHub Issues"
-		url = "https://github.com/rsocket"
-	  }
+		scm {
+			url = 'https://github.com/netifi-proteus/proteus-rsocket-bom'
+			connection = 'scm:git:git://github.com/netifi-proteus/proteus-rsocket-bom'
+			developerConnection = 'scm:git:git://github.com/netifi-proteus/proteus-rsocket-bom'
+		}
+
+		issueManagement {
+			system = "GitHub Issues"
+			url = "https://github.com/netifi-proteus"
+		}
 	}
-  }.writeTo("$buildDir/poms/rsocket-bom-${version}.xml")
+
+	generatedPom.writeTo("$buildDir/poms/${project.name}-${version}.xml")
 }
 
 publishing {
@@ -127,12 +120,67 @@ publishing {
 			pom.withXml {
 				def sb = asString()
 				sb.setLength 0
-				sb.append  file( "$buildDir/poms/pom-default.xml" ).text
+				sb.append  file( "$buildDir/poms/${project.name}-${version}.xml" ).text
 				println( sb.toString() )
 			}
 		}
 	}
 }
 
-apply from: "artifactory.gradle"
-apply from: "bintray.gradle"
+artifactory {
+	publish {
+		contextUrl = 'https://artifactory.netifiinc.com/artifactory'
+
+		repository {
+			repoKey = version.contains('SNAPSHOT')
+					? 'libs-snapshot-local'
+					: 'libs-release-local'
+			username = project.hasProperty('netifiArtifactoryUsername')
+					? project.property('netifiArtifactoryUsername')
+					: System.getenv('NETIFI_ARTIFACTORY_USERNAME')
+			password = project.hasProperty('netifiArtifactoryPassword')
+					? project.property('netifiArtifactoryPassword')
+					: System.getenv('NETIFI_ARTIFACTORY_PASSWORD')
+		}
+
+		defaults {
+			publications('maven')
+		}
+	}
+}
+
+plugins.withId('com.jfrog.bintray') {
+	bintray {
+		user = project.property('bintrayUser')
+		key = project.property('bintrayKey')
+
+		publications = ['maven']
+
+		//dryRun = true
+		publish = (osdetector.os == 'osx')
+		override = true
+
+		pkg {
+			repo = 'netifi-oss'
+			name = project.name
+			userOrg = 'netifi'
+			desc = "${project.description}"
+			websiteUrl = 'https://github.com/netifi-proteus/proteus-rsocket-bom'
+			issueTrackerUrl = 'https://github.com/netifi-proteus/proteus-rsocket-bom/issues'
+			vcsUrl = 'https://github.com/netifi-proteus/proteus-rsocket-bom.git'
+			licenses = ['Apache-2.0']
+			githubRepo = 'netifi-proteus/proteus-rsocket-bom'
+			githubReleaseNotesFile = 'CHANGELOG.md'
+
+			version {
+				name = "$project.version".toString()
+			}
+		}
+	}
+}
+
+
+publish.dependsOn("build")
+generatePomFileForMavenPublication.dependsOn("build")
+publishMavenPublicationToMavenLocal.dependsOn("build")
+publishToMavenLocal.dependsOn("build")
