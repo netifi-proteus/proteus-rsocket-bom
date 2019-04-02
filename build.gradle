@@ -26,7 +26,7 @@ buildscript {
 
 configure(rootProject) {
 
-  rootProject.group = 'io.rsocket'
+  rootProject.group = 'io.netifi.proteus'
 
   rootProject.description = 'Bill of materials to make sure a consistent set of versions is used for Rsocket-Java.'
   apply plugin: 'propdeps'
@@ -36,28 +36,28 @@ configure(rootProject) {
   apply plugin: 'com.jfrog.artifactory'
 
   repositories {
-	mavenCentral()
-	jcenter()
-	maven { url 'http://repo.spring.io/release' }
-	maven { url 'http://repo.spring.io/milestone' }
-	maven { url "https://oss.sonatype.org/content/repositories/releases/" }
+		mavenCentral()
+		jcenter()
+		maven { url 'http://repo.spring.io/release' }
+		maven { url 'http://repo.spring.io/milestone' }
+		maven { url "https://oss.sonatype.org/content/repositories/releases/" }
 
-	if (version.endsWith('BUILD-SNAPSHOT') || project.hasProperty('platformVersion')) {
-	  mavenLocal()
-	  maven { url 'http://repo.spring.io/libs-snapshot' }
-	}
+		if (version.endsWith('BUILD-SNAPSHOT') || project.hasProperty('platformVersion')) {
+			mavenLocal()
+			maven { url 'http://repo.spring.io/libs-snapshot' }
+		}
   }
 
   configurations.archives.artifacts.clear()
   artifacts {
-	// work around GRADLE-2406 by attaching text artifact
-	archives(file("rsocket-bom.txt"))
+		// work around GRADLE-2406 by attaching text artifact
+		archives(file("rsocket-bom.txt"))
   }
 
   install {
-	repositories.mavenInstaller {
-	  customizePom(pom, rootProject)
-	}
+		repositories.mavenInstaller {
+			customizePom(pom, rootProject)
+		}
   }
 
   dependencies {
@@ -134,24 +134,5 @@ publishing {
 	}
 }
 
-artifactory {
-	publish {
-		contextUrl = 'https://artifactory.netifiinc.com/artifactory'
-
-		repository {
-			repoKey = version.contains('SNAPSHOT')
-					? 'libs-snapshot-local'
-					: 'libs-release-local'
-			username = project.hasProperty('netifiArtifactoryUsername')
-					? project.property('netifiArtifactoryUsername')
-					: System.getenv('NETIFI_ARTIFACTORY_USERNAME')
-			password = project.hasProperty('netifiArtifactoryPassword')
-					? project.property('netifiArtifactoryPassword')
-					: System.getenv('NETIFI_ARTIFACTORY_PASSWORD')
-		}
-
-		defaults {
-			publications('maven')
-		}
-	}
-}
+apply from: "artifactory.gradle"
+apply from: "bintray.gradle"

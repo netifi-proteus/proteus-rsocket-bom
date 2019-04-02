@@ -103,3 +103,4 @@ ${sys:appHome}
 .project
 **/.settings/*
 **/bin/*
+**/.vscode/*

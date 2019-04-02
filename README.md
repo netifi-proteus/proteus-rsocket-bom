@@ -1,4 +1,4 @@
-# RSocket Bill Of Material Project
+# Proteus RSocket Bill Of Material Project
 
 A set of compatible versions for all these projects is curated under a BOM ("Bill of Material").
 
@@ -82,14 +82,6 @@ dependencies {
 
 ## BOM Versioning Scheme
 The BOM can be imported in Maven, which will provide a set of default artifact versions to use whenever the corresponding dependency is added to a pom without an explicitly provided version.
-
-As the different artifacts versions are not necessarily aligned, the BOM represents a release train with a codename-based versioning scheme: the usual MAJOR.MINOR numbers are replaced by a chemical name from the [Periodic Table of Elements](https://en.wikipedia.org/wiki/List_of_chemical_elements), in growing alphabetical order.
-
-The first stable release is simply suffixed with `-RELEASE`, but the equivalent of patch releases are also possible as "Service Releases", appending the suffix `-SR` followed by the number of the service release (eg. `-SR1`, `-SR2`).
-
-So far, the release trains are named:
- - `Palladium` for the `0.11.x` generation of RSocket-Java and for `0.2.x` generation 
- of RSocket-Rpc-Java
 
 ### Snapshot Artifacts
 
