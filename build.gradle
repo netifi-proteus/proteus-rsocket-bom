@@ -157,7 +157,7 @@ plugins.withId('com.jfrog.bintray') {
 						: System.getenv('NETIFI_BINTRAY_USER')
 		key = project.hasProperty('bintrayKey')
 						? project.property('bintrayKey')
-						: System.getenv('NETIFI_BINTRAY_KEY')
+						: System.getenv('NETIFI_BINTRAY_PASSWORD')
 
 		publications = ['maven']
 
