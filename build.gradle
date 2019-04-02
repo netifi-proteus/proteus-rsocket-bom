@@ -149,34 +149,37 @@ artifactory {
 		}
 	}
 }
-if (project.hasProperty('bintrayUser') && project.hasProperty('bintrayKey')) {
-	plugins.withId('com.jfrog.bintray') {
-		bintray {
-			user = project.property('bintrayUser')
-			key = project.property('bintrayKey')
 
-			publications = ['maven']
+plugins.withId('com.jfrog.bintray') {
+	bintray {
+		user = project.hasProperty('bintrayUser')
+						? project.property('bintrayUser')
+						: System.getenv('NETIFI_BINTRAY_USER')
+		key = project.hasProperty('bintrayKey')
+						? project.property('bintrayKey')
+						: System.getenv('NETIFI_BINTRAY_KEY')
 
-			//dryRun = true
-			publish = (osdetector.os == 'osx')
-			override = true
+		publications = ['maven']
 
-			pkg {
-				repo = 'netifi-oss'
-				name = project.name
-				userOrg = 'netifi'
-				desc = "${project.description}"
-				websiteUrl = 'https://github.com/netifi-proteus/proteus-rsocket-bom'
-				issueTrackerUrl =
-								'https://github.com/netifi-proteus/proteus-rsocket-bom/issues'
-				vcsUrl = 'https://github.com/netifi-proteus/proteus-rsocket-bom.git'
-				licenses = ['Apache-2.0']
-				githubRepo = 'netifi-proteus/proteus-rsocket-bom'
-				githubReleaseNotesFile = 'CHANGELOG.md'
+		//dryRun = true
+		publish = (osdetector.os == 'osx')
+		override = true
 
-				version {
-					name = "$project.version".toString()
-				}
+		pkg {
+			repo = 'netifi-oss'
+			name = project.name
+			userOrg = 'netifi'
+			desc = "${project.description}"
+			websiteUrl = 'https://github.com/netifi-proteus/proteus-rsocket-bom'
+			issueTrackerUrl =
+							'https://github.com/netifi-proteus/proteus-rsocket-bom/issues'
+			vcsUrl = 'https://github.com/netifi-proteus/proteus-rsocket-bom.git'
+			licenses = ['Apache-2.0']
+			githubRepo = 'netifi-proteus/proteus-rsocket-bom'
+			githubReleaseNotesFile = 'CHANGELOG.md'
+
+			version {
+				name = "$project.version".toString()
 			}
 		}
 	}
