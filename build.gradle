@@ -13,182 +13,180 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 buildscript {
-  repositories {
-	maven { url "https://repo.spring.io/plugins-release" }
-  }
-  dependencies {
-	  classpath 'io.spring.gradle:propdeps-plugin:0.0.9.RELEASE'
-	  classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4"
-	  classpath 'org.jfrog.buildinfo:build-info-extractor-gradle:4.9.3'
-  }
+    repositories {
+        maven {
+            url 'https://sonatype.netifiinc.com/repository/netifi-plugin-group/'
+            credentials {
+                username = "${netifiReadOnlyUsername}"
+                password = "${netifiReadOnlyPassword}"
+            }
+        }
+    }
+    dependencies {
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4'
+        classpath 'org.jfrog.buildinfo:build-info-extractor-gradle:4.9.3'
+        classpath 'tane.mahuta.build:gradle-plugin-version:2.0.3'
+        classpath 'io.spring.gradle:dependency-management-plugin:1.0.7.RELEASE'
+    }
 }
 
-rootProject.group = 'io.netifi.proteus'
-
-rootProject.description = 'Bill of materials to make sure a consistent set of versions is used for Rsocket-Java.'
-apply plugin: 'propdeps'
-apply plugin: 'propdeps-maven'
-apply plugin: 'maven'
+apply plugin: 'io.spring.dependency-management'
 apply plugin: 'maven-publish'
 apply plugin: 'com.jfrog.artifactory'
 apply plugin: 'com.jfrog.bintray'
+apply plugin: 'tane.mahuta.gradle.semver-branch-plugin'
 
 repositories {
-	mavenCentral()
-	jcenter()
-	maven { url 'http://repo.spring.io/release' }
-	maven { url 'http://repo.spring.io/milestone' }
-	maven { url "https://oss.sonatype.org/content/repositories/releases/" }
-
-	if (version.endsWith('BUILD-SNAPSHOT') || project.hasProperty('platformVersion')) {
-		mavenLocal()
-		maven { url 'http://repo.spring.io/libs-snapshot' }
-	}
+    maven {
+        url 'https://sonatype.netifiinc.com/repository/maven-central/'
+        credentials {
+            username = "${netifiReadOnlyUsername}"
+            password = "${netifiReadOnlyPassword}"
+        }
+    }
+    maven {
+        url 'https://sonatype.netifiinc.com/repository/jcenter/'
+        credentials {
+            username = "${netifiReadOnlyUsername}"
+            password = "${netifiReadOnlyPassword}"
+        }
+    }
+    maven {
+        url 'https://sonatype.netifiinc.com/repository/spring-release/'
+        credentials {
+            username = "${netifiReadOnlyUsername}"
+            password = "${netifiReadOnlyPassword}"
+        }
+    }
+    maven {
+        url 'https://sonatype.netifiinc.com/repository/spring-milestone/'
+        credentials {
+            username = "${netifiReadOnlyUsername}"
+            password = "${netifiReadOnlyPassword}"
+        }
+    }
+    maven {
+        url 'https://sonatype.netifiinc.com/repository/sonatype-oss-releases/'
+        credentials {
+            username = "${netifiReadOnlyUsername}"
+            password = "${netifiReadOnlyPassword}"
+        }
+    }
+    maven {
+        url 'https://sonatype.netifiinc.com/repository/netifi-oss/'
+        credentials {
+            username = "${netifiReadOnlyUsername}"
+            password = "${netifiReadOnlyPassword}"
+        }
+    }
 }
 
-configurations.archives.artifacts.clear()
+dependencyManagement {
+    dependencies {
+        dependency "io.rsocket:rsocket-core:${rsocketVersion}"
+        dependency "io.rsocket:rsocket-load-balancer:${rsocketVersion}"
+        dependency "io.rsocket:rsocket-micrometer:${rsocketVersion}"
+        dependency "io.rsocket:rsocket-test:${rsocketVersion}"
+        dependency "io.rsocket:rsocket-transport-netty:${rsocketVersion}"
+        dependency "io.rsocket:rsocket-transport-local:${rsocketVersion}"
 
-build.doLast {
-  pom {
-	  customizePom(it, project)
-  }
-}
-
-dependencies {
-  compile "io.rsocket:rsocket-core:${rsocketVersion}"
-  compile "io.rsocket:rsocket-load-balancer:${rsocketVersion}"
-  compile "io.rsocket:rsocket-micrometer:${rsocketVersion}"
-  compile "io.rsocket:rsocket-test:${rsocketVersion}"
-  compile "io.rsocket:rsocket-transport-netty:${rsocketVersion}"
-  compile "io.rsocket:rsocket-transport-local:${rsocketVersion}"
-
-  compile "io.rsocket.rpc:rsocket-rpc-core:${rsocketRpcVersion}"
-  compile "io.rsocket.rpc:rsocket-rpc-metrics-idl:${rsocketRpcVersion}"
-  compile "io.rsocket.rpc:rsocket-rpc-protobuf:${rsocketRpcVersion}"
-  compile "io.rsocket.rpc:rsocket-rpc-protobuf-idl:${rsocketRpcVersion}"
-}
-
-def customizePom(generatedPom, gradleProject) {
-	//make sure that dependencies are under <dependencyManagement>
-	generatedPom.withXml {
-		if (generatedPom.generatedDependencies.size > 0) {
-			asNode().appendNode('dependencyManagement', asNode().dependencies)
-			asNode().dependencies.replaceNode {}
-		}
-	}
-
-	generatedPom.project {
-		name = 'Proteus-RSocket-Java Release Train - BOM'
-		description = gradleProject.description
-		url = 'https://www.netifi.com'
-		groupId = group
-
-		packaging = "pom"
-
-		organization {
-			name = 'Netifi, Inc.'
-			url = 'https://www.netifi.com'
-		}
-
-		licenses {
-			license {
-				name 'The Apache Software License, Version 2.0'
-				url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-				distribution 'repo'
-			}
-		}
-
-		scm {
-			url = 'https://github.com/netifi-proteus/proteus-rsocket-bom'
-			connection = 'scm:git:git://github.com/netifi-proteus/proteus-rsocket-bom'
-			developerConnection = 'scm:git:git://github.com/netifi-proteus/proteus-rsocket-bom'
-		}
-
-		issueManagement {
-			system = "GitHub Issues"
-			url = "https://github.com/netifi-proteus"
-		}
-	}
-
-	generatedPom.writeTo("$buildDir/poms/${project.name}-${version}.xml")
+        dependency "io.rsocket.rpc:rsocket-rpc-core:${rsocketRpcVersion}"
+        dependency "io.rsocket.rpc:rsocket-rpc-metrics-idl:${rsocketRpcVersion}"
+        dependency "io.rsocket.rpc:rsocket-rpc-protobuf:${rsocketRpcVersion}"
+        dependency "io.rsocket.rpc:rsocket-rpc-protobuf-idl:${rsocketRpcVersion}"
+    }
 }
 
 publishing {
-	publications {
-		maven(MavenPublication) {
-			pom.withXml {
-				def sb = asString()
-				sb.setLength 0
-				sb.append  file( "$buildDir/poms/${project.name}-${version}.xml" ).text
-				println( sb.toString() )
-			}
-		}
-	}
+    publications {
+        mavenBom(MavenPublication) {
+            pom {
+                name = 'Proteus RSocket Java BOM'
+                description = 'Bill of materials to make sure a consistent set of versions is used for Rsocket-Java.'
+                url = 'https://www.netifi.com'
+
+                organization {
+                    name = 'Netifi, Inc.'
+                    url = 'https://www.netifi.com'
+                }
+
+                licenses {
+                    license {
+                        name = 'The Apache Software License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        distribution = 'repo'
+                    }
+                }
+
+                scm {
+                    url = 'https://github.com/netifi-proteus/proteus-rsocket-bom'
+                    connection = 'scm:git:git://github.com/netifi-proteus/proteus-rsocket-bom'
+                    developerConnection = 'scm:git:git://github.com/netifi-proteus/proteus-rsocket-bom'
+                }
+
+                issueManagement {
+                    system = "GitHub Issues"
+                    url = "https://github.com/netifi-proteus/proteus-rsocket-bom/issues"
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            url 'https://sonatype.netifiinc.com/repository/netifi-maven-snapshots/'
+            credentials {
+                username = "${netifiPublishUsername}"
+                password = "${netifiPublishPassword}"
+            }
+        }
+    }
 }
 
 artifactory {
-	publish {
-		contextUrl = 'https://artifactory.netifiinc.com/artifactory'
+    publish {
+        contextUrl = 'https://artifactory.netifiinc.com/artifactory'
 
-		repository {
-			repoKey = version.contains('SNAPSHOT')
-					? 'libs-snapshot-local'
-					: 'libs-release-local'
-			username = project.hasProperty('netifiArtifactoryUsername')
-					? project.property('netifiArtifactoryUsername')
-					: System.getenv('NETIFI_ARTIFACTORY_USERNAME')
-			password = project.hasProperty('netifiArtifactoryPassword')
-					? project.property('netifiArtifactoryPassword')
-					: System.getenv('NETIFI_ARTIFACTORY_PASSWORD')
-		}
+        repository {
+            repoKey = version.qualifier == 'SNAPSHOT' ? 'libs-snapshot-local' : 'libs-release-local'
+            username = "${netifiArtifactoryUsername}"
+            password = "${netifiArtifactoryPassword}"
+        }
 
-		defaults {
-			publications('maven')
-		}
-	}
+        defaults {
+            publications('mavenBom')
+        }
+    }
 }
 
-plugins.withId('com.jfrog.bintray') {
-	bintray {
-		user = project.hasProperty('bintrayUser')
-						? project.property('bintrayUser')
-						: System.getenv('NETIFI_BINTRAY_USER')
-		key = project.hasProperty('bintrayKey')
-						? project.property('bintrayKey')
-						: System.getenv('NETIFI_BINTRAY_PASSWORD')
+bintray {
+    user = "${bintrayUser}"
+    key = "${bintrayKey}"
+    publications = ['mavenBom']
+    publish = true
+    override = true
+    pkg {
+        repo = 'netifi-oss'
+        name = project.name
+        userOrg = 'netifi'
+        desc = 'Bill of materials to make sure a consistent set of versions is used for Rsocket-Java.'
+        websiteUrl = 'https://github.com/netifi-proteus/proteus-rsocket-bom'
+        issueTrackerUrl = 'https://github.com/netifi-proteus/proteus-rsocket-bom/issues'
+        vcsUrl = 'https://github.com/netifi-proteus/proteus-rsocket-bom.git'
+        licenses = ['Apache-2.0']
+        githubRepo = 'netifi-proteus/proteus-rsocket-bom'
+        githubReleaseNotesFile = 'CHANGELOG.md'
 
-		publications = ['maven']
-
-		//dryRun = true
-		publish = true
-		override = true
-
-		pkg {
-			repo = 'netifi-oss'
-			name = project.name
-			userOrg = 'netifi'
-			desc = "${project.description}"
-			websiteUrl = 'https://github.com/netifi-proteus/proteus-rsocket-bom'
-			issueTrackerUrl =
-							'https://github.com/netifi-proteus/proteus-rsocket-bom/issues'
-			vcsUrl = 'https://github.com/netifi-proteus/proteus-rsocket-bom.git'
-			licenses = ['Apache-2.0']
-			githubRepo = 'netifi-proteus/proteus-rsocket-bom'
-			githubReleaseNotesFile = 'CHANGELOG.md'
-
-			version {
-				name = "$project.version".toString()
-			}
-		}
-	}
+        version {
+            name = "$project.version".toString()
+        }
+    }
 }
 
+task clean {
+    delete rootProject.buildDir
+}
 
-publish.dependsOn("build")
-bintrayPublish.dependsOn("build")
-bintrayUpload.dependsOn("build")
-generatePomFileForMavenPublication.dependsOn("build")
-publishMavenPublicationToMavenLocal.dependsOn("build")
-publishToMavenLocal.dependsOn("build")
+task printVersion {
+    println project.version
+}
