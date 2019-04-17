@@ -1,7 +1,12 @@
 language: java
 sudo: required
 jdk: oraclejdk8
-install: true
+install:
+  - git checkout ${TRAVIS_BRANCH}
+  - git branch -u origin/${TRAVIS_BRANCH}
+  - git config branch.${TRAVIS_BRANCH}.remote origin
+  - git config branch.${TRAVIS_BRANCH}.merge refs/heads/${TRAVIS_BRANCH}
+  - git symbolic-ref HEAD
 script: ci/travis.sh
 before_cache:
 - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
