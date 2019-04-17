@@ -2,8 +2,10 @@ language: java
 sudo: required
 jdk: oraclejdk8
 install:
-  - git config remote.origin.fetch +refs/heads/*:refs/remotes/origin/*
-  - git fetch --depth=2147483647
+  - git checkout ${TRAVIS_BRANCH}
+  - git branch -u origin/${TRAVIS_BRANCH}
+  - git config branch.${TRAVIS_BRANCH}.remote origin
+  - git config branch.${TRAVIS_BRANCH}.merge refs/heads/${TRAVIS_BRANCH}
   - git symbolic-ref HEAD
 script: ci/travis.sh
 before_cache:
