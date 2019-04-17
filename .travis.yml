@@ -3,7 +3,7 @@ sudo: required
 jdk: oraclejdk8
 install:
   - git config remote.origin.fetch +refs/heads/*:refs/remotes/origin/*
-  - git fetch --unshallow --tags
+  - git fetch --depth=2147483647
 script: ci/travis.sh
 before_cache:
 - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
