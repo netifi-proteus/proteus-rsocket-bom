@@ -4,6 +4,7 @@ jdk: oraclejdk8
 install:
   - git config remote.origin.fetch +refs/heads/*:refs/remotes/origin/*
   - git fetch --depth=2147483647
+  - git symbolic-ref HEAD
 script: ci/travis.sh
 before_cache:
 - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
